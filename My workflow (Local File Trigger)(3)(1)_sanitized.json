@@ -120,7 +120,7 @@
     },
     {
       "parameters": {
-        "command": "=timeout 900 lftp -e \"set net:timeout 15; set net:max-retries 2; set net:reconnect-interval-base 5; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+        "command": "=timeout 900 lftp -e \"set net:timeout 15; set net:max-retries 2; set net:reconnect-interval-base 5; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" <REDACTED>"
       },
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
@@ -133,7 +133,7 @@
     },
     {
       "parameters": {
-        "command": "=timeout 1800 lftp -e \"set net:timeout 30; set net:max-retries 5; set net:reconnect-interval-base 10; set net:persist-retries 3; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+        "command": "=timeout 1800 lftp -e \"set net:timeout 30; set net:max-retries 5; set net:reconnect-interval-base 10; set net:persist-retries 3; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" <REDACTED>"
       },
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
