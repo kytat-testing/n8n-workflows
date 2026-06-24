@@ -1,61 +1,136 @@
+# 🎮 n8n Game File Automation Workflows
+
+Automatización completa de gestión de archivos (principalmente juegos) usando n8n.
+
+---
+
 ## 🚀 Overview
 
-Este proyecto contiene dos workflows de n8n diseñados para automatizar completamente la gestión de archivos (principalmente juegos):
-De referencia se toma un ps3 , pero el nodo puede ser modificado y orientado a la extension y ruta deseada
+Este proyecto incluye dos workflows diseñados para automatizar el manejo de archivos desde su recepción hasta su transferencia final.
 
-Workflow 1 Local (Webhook Trigger)
-Workflow 2 Google (Sheets + Drive Trigger)
+Está pensado tomando como referencia una consola **PS3**, pero puede adaptarse fácilmente a cualquier sistema, ruta o tipo de archivo.
 
-### Ambos flujos permiten:
+---
 
-📥 Recepción o descarga de archivos
-📦 Extracción automática (zip, rar, 7z)
-🧠 Clasificación inteligente por tipo de archivo
-📤 Transferencia a consola vía FTP (lftp)
-🧹 Limpieza automática de archivos temporales
-📲 Notificación por Telegram (solo en el flujo local)
+## 🔄 Workflows incluidos
 
+* **Local Workflow**
 
-### 🧠 Lógica de Clasificación (Clave del sistema)
+  * Trigger: Webhook
+  * Incluye notificaciones por Telegram
+
+* **Google Workflow**
+
+  * Trigger: Google Sheets + Google Drive
+  * Orientado a automatización desde la nube
+
+---
+
+## ⚙️ Funcionalidades
+
+* 📥 Recepción o descarga de archivos
+* 📦 Extracción automática (`zip`, `rar`, `7z`)
+* 🧠 Clasificación inteligente por tipo de archivo
+* 📤 Transferencia vía FTP (`lftp`)
+* 🧹 Limpieza automática de archivos temporales
+* 📲 Notificaciones por Telegram *(solo en flujo local)*
+
+---
+
+## 🧠 Lógica de Clasificación
+
 Ejemplo:
+
+```javascript
 if (ext === "pkg") {
-  if (sizeGB > 5) tipo = "juego";
-  else if (sizeGB < 1 && esDLC) tipo = "dlc";
+  if (sizegb > 5) tipo = "juego";
+  else if (sizegb < 1 && esdlc) tipo = "dlc";
   else tipo = "update";
 }
+```
 
-Esto permite automatizar decisiones sin intervención manual.
+Permite automatizar decisiones sin intervención manual.
 
-### 📦 Requisitos
-n8n (Docker recomendado)
-Node.js (base image: node:bullseye)
-7z instalado en el contenedor
-lftp instalado
-Acceso FTP a PS3
-Bot de Telegram (opcional)
+---
 
-para flujo alterno requiere 
-Google API credentials:
-Google Sheets
-Google Drive
+## 📦 Requisitos
 
-### ⚡ Casos de uso
-🎮 Automatización de biblioteca de juegos PS3
-🏠 Homelab gamer
-🤖 Integración con bots (Telegram / Sheets)
-📡 Descargas automáticas desde la nube
-🧹 Ventajas
-100% automatizado
-Escalable
-Modular (puedes conectar más triggers)
-Reduce errores manuales
-Limpieza automática de storage
+* n8n (recomendado en Docker)
+* Node.js (`node:bullseye`)
+* `7z` instalado
+* `lftp` instalado
+* Acceso FTP
+* Bot de Telegram (opcional)
 
-### 🚧 Posibles mejoras
-Soporte multi-consola (PS2, PSP, etc.)
-Integración con torrents
-Validación hash (MD5/SHA)
-Notificaciones avanzadas
+### Para el workflow con Google
 
+* Credenciales de Google API
+* Google Sheets
+* Google Drive
 
+---
 
+## ⚡ Casos de uso
+
+* 🎮 Automatización de biblioteca de juegos
+* 🏠 Homelab gamer
+* 🤖 Integración con bots (Telegram / Sheets)
+* 📡 Descargas automatizadas desde la nube
+
+---
+
+## 🧹 Ventajas
+
+* ✔ 100% automatizado
+* ✔ Escalable
+* ✔ Modular
+* ✔ Reduce errores manuales
+* ✔ Limpieza automática de almacenamiento
+
+---
+
+## 🚧 Posibles mejoras
+
+* Soporte multi-consola (PS2, PSP, etc.)
+* Integración con torrents
+* Validación de integridad (MD5 / SHA)
+* Notificaciones más avanzadas
+
+---
+
+## ⚠️ Configuración
+
+Los valores marcados como:
+
+```
+<REDACTED>
+```
+
+deben ser reemplazados con tus propios datos:
+
+* IP de la consola
+* Credenciales FTP
+* Tokens / API keys
+
+---
+
+## 📌 Notas
+
+* Revisa y adapta los workflows antes de usarlos en producción
+* Puedes modificar fácilmente los nodos para otros tipos de archivos
+* Compatible con entornos self-hosted (homelab)
+
+---
+
+## 🤖 Soporte
+
+Si tienes dudas o errores, puedes apoyarte en:
+
+* Documentación oficial de n8n https://docs.n8n.io/
+* Herramientas de IA
+
+---
+
+## ⭐ Contribuciones
+
+Las mejoras y sugerencias son bienvenidas.
