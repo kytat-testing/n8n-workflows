@@ -1,0 +1,390 @@
+{
+  "name": "My workflow (Local File Trigger)",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "archivo-nuevo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1520,
+        512
+      ],
+      "id": "15f665ba-aec1-4517-a084-c6dc7892c563",
+      "name": "Webhook archivo nuevo",
+      "webhookId": "3f6d9b2a-8c4e-4a71-b5d0-6e2f8a9c1d34"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// El watcher de Windows envia { path } al webhook; llega dentro de $json.body\nconst fullPath = ($json.body && $json.body.path) ? $json.body.path : ($json.path || \"\");\nconst filename = fullPath.split(\"/\").pop() || \"file\";\nconst ext = filename.includes('.') ? (filename.split('.').pop() || '').toLowerCase() : '';\n// localPath es la ruta REAL del archivo (ya esta en disco, no hay que descargar nada)\nconst localPath = fullPath;\nreturn { json: { fileId: null, filename, ext, localPath } };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1248,
+        512
+      ],
+      "id": "8cf621c8-7203-4e37-ae57-1bb46f3e3180",
+      "name": "Calcular filename"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "209a1180-8727-483a-8280-0d0489893257",
+              "leftValue": "={{ [\"zip\",\"rar\",\"7z\"].includes($json.ext) }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1008,
+        512
+      ],
+      "id": "ca652563-fc13-4fe5-bd86-a07736ed23b9",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "command": "=7z x \"{{ $json.localPath }}\" -o\"/files/extracted/{{ $json.filename }}/\" -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -784,
+        320
+      ],
+      "id": "7f9aa097-7a4b-445c-ad1b-28f3d21f570a",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "command": "=find \"/files/extracted/{{ $('Calcular filename').item.json.filename }}/\" -type f -exec stat -c '%n|%s' {} +"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -608,
+        192
+      ],
+      "id": "c00ef9b0-ff89-4ff5-aa02-7b15ecc7c8ae",
+      "name": "Listar extraidos (find)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Clasifica un archivo suelto (no comprimido). Usa ruta real y tamano leido de disco.\nfunction safeName(name) {\n  let s = (name || \"file\").normalize(\"NFC\");\n  s = s.replace(/[\\x00-\\x1F]/g, \"\");\n  s = s.replace(/[\\[\\]]/g, \"\");\n  s = s.replace(/[:*?\"<>|]/g, \"_\");\n  s = s.replace(/\\s+/g, \"_\").trim();\n  return s || \"file\";\n}\n\n// datos reales del flujo (no del binario, que ya no viaja)\nconst cf = $('Calcular filename').item.json;\nconst filename = cf.filename || \"file\";\nconst ext = (cf.ext || \"\").toLowerCase();\nconst localPath = cf.localPath || (\"/files/\" + filename);\nconst filenameSafe = safeName(filename);\nconst nombre = filenameSafe.toLowerCase();\n\n// tamano real leido por el nodo 'Tamano real (stat)' (su stdout)\nconst sizeBytes = Number(($json.stdout || \"0\").trim()) || 0;\nconst sizeGB = sizeBytes / (1024 ** 3);\n\nlet rutaDestino = \"/_REVISAR/\";\nlet tipo = \"desconocido\";\n\nif (ext === \"pkg\") {\n  rutaDestino = \"/packages/\";\n  const esDLC = /dlc|addon|add-on/.test(nombre);\n  if (sizeGB > 5) tipo = \"juego\";\n  else if (sizeGB < 1 && esDLC) tipo = \"dlc\";\n  else tipo = \"update\";\n} else if (ext === \"iso\" || ext === \"bin\") {\n  tipo = \"iso\";\n  if (ext === \"bin\" || /ps1|psx/.test(nombre)) rutaDestino = \"/PSXISO/\";\n  else if (/ps2/.test(nombre)) rutaDestino = \"/PS2ISO/\";\n  else if (/psp/.test(nombre)) rutaDestino = \"/PSPISO/\";\n  else rutaDestino = \"/PS3ISO/\";\n} else if (ext === \"rap\") { rutaDestino = \"/exdata/\"; tipo = \"licencia\"; }\nelse if (ext === \"sprx\") { rutaDestino = \"/plugins/\"; tipo = \"plugin\"; }\nelse if (ext === \"self\" || ext === \"edat\") { rutaDestino = \"/game/\"; tipo = \"instalado\"; }\nelse if (ext === \"\") { rutaDestino = \"/GAMES/\"; tipo = \"carpeta_jb\"; }\n\nreturn { json: { fileId: cf.fileId, filename, filenameSafe, ext, sizeBytes, sizeGB, tipo, rutaDestino, localPath } };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -784,
+        608
+      ],
+      "id": "5a367b96-d569-440e-8738-4ed2fb8ba583",
+      "name": "Clasificar archivo (FALSE)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parsea la salida de find/stat (ruta|tamano) y clasifica cada archivo extraido.\n// Ya no se cargan los binarios a n8n: solo se usan ruta, nombre y tamano.\nfunction safeName(name) {\n  let s = (name || \"file\").normalize(\"NFC\");\n  s = s.replace(/[\\x00-\\x1F]/g, \"\");\n  s = s.replace(/[\\[\\]]/g, \"\");              // quitar corchetes\n  s = s.replace(/[:*?\"<>|]/g, \"_\");\n  s = s.replace(/\\s+/g, \"_\").trim();          // espacios -> guion bajo\n  return s || \"file\";\n}\n\nconst stdout = $input.first().json.stdout || \"\";\nconst out = [];\n\nfor (const line of stdout.split(\"\\n\")) {\n  const t = line.trim();\n  if (!t) continue;\n  const sep = t.lastIndexOf(\"|\");\n  if (sep < 0) continue;\n  const localPath = t.slice(0, sep);\n  const sizeBytes = Number(t.slice(sep + 1)) || 0;\n  const filename = localPath.split(\"/\").pop() || \"file\";\n  const filenameSafe = safeName(filename);\n  const nombre = filenameSafe.toLowerCase();\n  const ext = filename.includes('.') ? (filename.split('.').pop() || '').toLowerCase() : '';\n  const sizeGB = sizeBytes / (1024 ** 3);\n\n  let rutaDestino = \"/_REVISAR/\";\n  let tipo = \"desconocido\";\n\n  if (ext === \"pkg\") {\n    rutaDestino = \"/packages/\";\n    const esDLC = /dlc|addon|add-on/.test(nombre);\n    if (sizeGB > 5) tipo = \"juego\";\n    else if (sizeGB < 1 && esDLC) tipo = \"dlc\";\n    else tipo = \"update\";\n  } else if (ext === \"iso\" || ext === \"bin\") {\n    tipo = \"iso\";\n    if (ext === \"bin\" || /ps1|psx/.test(nombre)) rutaDestino = \"/PSXISO/\";\n    else if (/ps2/.test(nombre)) rutaDestino = \"/PS2ISO/\";\n    else if (/psp/.test(nombre)) rutaDestino = \"/PSPISO/\";\n    else rutaDestino = \"/PS3ISO/\";\n  } else if (ext === \"rap\") { rutaDestino = \"/exdata/\"; tipo = \"licencia\"; }\n  else if (ext === \"sprx\") { rutaDestino = \"/plugins/\"; tipo = \"plugin\"; }\n  else if (ext === \"self\" || ext === \"edat\") { rutaDestino = \"/game/\"; tipo = \"instalado\"; }\n  else if (ext === \"\" || /ps3_game/.test(nombre)) { rutaDestino = \"/GAMES/\"; tipo = \"carpeta_jb\"; }\n\n  out.push({ json: { filename, filenameSafe, ext, sizeBytes, sizeGB, tipo, rutaDestino, localPath } });\n}\n\nreturn out;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        192
+      ],
+      "id": "b0bd05ba-a704-47e0-b2ff-960b2873578d",
+      "name": "Clasificar extraidos (TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=timeout 900 lftp -e \"set net:timeout 15; set net:max-retries 2; set net:reconnect-interval-base 5; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        208
+      ],
+      "id": "1d242d84-9dc6-4e96-a058-ea690c822e13",
+      "name": "Subir a PS3 (lftp TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=timeout 1800 lftp -e \"set net:timeout 30; set net:max-retries 5; set net:reconnect-interval-base 10; set net:persist-retries 3; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -576,
+        608
+      ],
+      "id": "2bd4f485-507e-4d70-98af-fa619cea50d2",
+      "name": "Subir a PS3 (lftp FALSE)"
+    },
+    {
+      "parameters": {
+        "command": "=ZIP=\"{{ $('Calcular filename').item.json.localPath }}\"; EXT=\"/files/extracted/{{ $('Calcular filename').item.json.filename }}\"; rm -f \"$ZIP\"; rm -rf \"$EXT\"; echo \"limpieza TRUE: zip=$ZIP ext=$EXT\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c06a185e-373a-4526-ad13-2263b0d1d125",
+      "name": "Limpiar temporales (TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=ARCH=\"{{ $('Calcular filename').item.json.localPath }}\"; rm -f \"$ARCH\"; echo \"limpieza FALSE: $ARCH\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -352,
+        608
+      ],
+      "id": "1ac76886-1a36-435e-80a1-6da22573e9be",
+      "name": "Limpiar temporales (FALSE)"
+    },
+    {
+      "parameters": {
+        "command": "=F=\"{{ $('Calcular filename').item.json.localPath }}\"; if [ -f \"$F\" ]; then stat -c%s \"$F\"; else echo 0; fi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -1008,
+        720
+      ],
+      "id": "7c2c1ddb-530a-424f-b9e1-d8705e0ceb00",
+      "name": "Tamano real (stat)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -224,
+        192
+      ],
+      "id": "f9e34813-99bc-4b37-9343-ff160beb8853",
+      "name": "Loop archivos (TRUE)"
+    },
+    {
+      "parameters": {
+        "chatId": "2034845603",
+        "text": "=✅ Envío finalizado y limpieza aplicada: {{ $('Calcular filename').first().json.filename }}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        256,
+        464
+      ],
+      "id": "66a4c377-61dc-47b7-8de2-a7d801e02097",
+      "name": "Send a text message",
+      "webhookId": "32ffe9ed-fa6e-4382-9687-15aca5dabee5",
+      "credentials": "<REDACTED>"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook archivo nuevo": {
+      "main": [
+        [
+          {
+            "node": "Calcular filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular filename": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tamano real (stat)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Listar extraidos (find)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Listar extraidos (find)": {
+      "main": [
+        [
+          {
+            "node": "Clasificar extraidos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar extraidos (TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Loop archivos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar archivo (FALSE)": {
+      "main": [
+        [
+          {
+            "node": "Subir a PS3 (lftp FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a PS3 (lftp TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Loop archivos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a PS3 (lftp FALSE)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar temporales (FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tamano real (stat)": {
+      "main": [
+        [
+          {
+            "node": "Clasificar archivo (FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop archivos (TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar temporales (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Subir a PS3 (lftp TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar temporales (TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limpiar temporales (FALSE)": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "4d6604a3-48b6-423c-83c2-2d784e07cd3d",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "f71d68d44cb5993d15f9fd665b4c20c7dfdcfb9576afb9672cf0e7cfe70ffbd5"
+  },
+  "nodeGroups": [],
+  "id": "JTK0wwJERjGnp7Ra",
+  "tags": []
+}

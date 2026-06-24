@@ -1,0 +1,559 @@
+{
+  "name": "google_workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {}
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI",
+          "mode": "list",
+          "cachedResultName": "games",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {
+          "dataLocationOnSheet": {
+            "values": {
+              "rangeDefinition": "specifyRange"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        -1936,
+        944
+      ],
+      "id": "5adfd9a1-f8d2-4b95-859b-5983ed37b958",
+      "name": "Google Sheets Trigger",
+      "credentials": "<REDACTED>"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI",
+          "mode": "list",
+          "cachedResultName": "games",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1GCd6luiCL9_wVSLQr9mk_oxkADcDXEYYJG6Vg29DuJI/edit#gid=0"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "=URL",
+              "lookupValue": "={{ $json[\"URL\"] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -1712,
+        944
+      ],
+      "id": "5a5c9ee2-0475-48fb-aa15-93a7129ecf39",
+      "name": "Get row(s) in sheet",
+      "credentials": "<REDACTED>"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Convierte la URL de Google Drive en un enlace de descarga directa\n// Ejemplo: https://drive.google.com/file/d/1abcXYZ/view?usp=sharing\n// → https://drive.google.com/uc?export=download&id=1abcXYZ\nconst url = $json.URL || \"\";\n\nlet fileId = null;\n\nlet match = url.match(/\\/d\\/([a-zA-Z0-9_-]+)/);\nif (match) {\n  fileId = match[1];\n}\n\nif (!fileId) {\n  match = url.match(/[?&]id=([a-zA-Z0-9_-]+)/);\n  if (match) {\n    fileId = match[1];\n  }\n}\n\nreturn {\n  fileId: fileId\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1488,
+        944
+      ],
+      "id": "db27050e-daf9-4e57-9886-418533140186",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "209a1180-8727-483a-8280-0d0489893257",
+              "leftValue": "={{ [\"zip\",\"rar\",\"7z\"].includes($json.ext) }}",
+              "rightValue": "=",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -624,
+        944
+      ],
+      "id": "f2e73b5e-ec1d-4843-bed4-4fa4798eeb80",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "command": "=7z x \"/files/{{ $json.filename }}\" -o\"/files/extracted/{{ $json.filename }}/\" -y"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -400,
+        752
+      ],
+      "id": "bae5edbe-869b-489f-b432-e9586b3a1380",
+      "name": "Execute Command"
+    },
+    {
+      "parameters": {
+        "fileSelector": "=/files/extracted/{{ $('Calcular filename').item.json.filename }}/**",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        624
+      ],
+      "id": "bf9160af-4d3e-4d72-8f49-f1c16d21f735",
+      "name": "Read/Write Files from Disk2"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Clasifica un archivo suelto (no comprimido). Usa ruta real y tamano leido de disco.\nfunction safeName(name) {\n  let s = (name || \"file\").normalize(\"NFC\");\n  s = s.replace(/[\\x00-\\x1F]/g, \"\");\n  s = s.replace(/[\\[\\]]/g, \"\");\n  s = s.replace(/[:*?\"<>|]/g, \"_\");\n  s = s.replace(/\\s+/g, \"_\").trim();\n  return s || \"file\";\n}\n\n// datos reales del flujo (no del binario, que ya no viaja)\nconst cf = $('Calcular filename').item.json;\nconst filename = cf.filename || \"file\";\nconst ext = (cf.ext || \"\").toLowerCase();\nconst localPath = cf.localPath || (\"/files/\" + filename);\nconst filenameSafe = safeName(filename);\nconst nombre = filenameSafe.toLowerCase();\n\n// tamano real leido por el nodo 'Tamano real (stat)' (su stdout)\nconst sizeBytes = Number(($json.stdout || \"0\").trim()) || 0;\nconst sizeGB = sizeBytes / (1024 ** 3);\n\nlet rutaDestino = \"/_REVISAR/\";\nlet tipo = \"desconocido\";\n\nif (ext === \"pkg\") {\n  rutaDestino = \"/packages/\";\n  const esDLC = /dlc|addon|add-on/.test(nombre);\n  if (sizeGB > 5) tipo = \"juego\";\n  else if (sizeGB < 1 && esDLC) tipo = \"dlc\";\n  else tipo = \"update\";\n} else if (ext === \"iso\" || ext === \"bin\") {\n  tipo = \"iso\";\n  if (ext === \"bin\" || /ps1|psx/.test(nombre)) rutaDestino = \"/PSXISO/\";\n  else if (/ps2/.test(nombre)) rutaDestino = \"/PS2ISO/\";\n  else if (/psp/.test(nombre)) rutaDestino = \"/PSPISO/\";\n  else rutaDestino = \"/PS3ISO/\";\n} else if (ext === \"rap\") { rutaDestino = \"/exdata/\"; tipo = \"licencia\"; }\nelse if (ext === \"sprx\") { rutaDestino = \"/plugins/\"; tipo = \"plugin\"; }\nelse if (ext === \"self\" || ext === \"edat\") { rutaDestino = \"/game/\"; tipo = \"instalado\"; }\nelse if (ext === \"\") { rutaDestino = \"/GAMES/\"; tipo = \"carpeta_jb\"; }\n\nreturn { json: { fileId: cf.fileId, filename, filenameSafe, ext, sizeBytes, sizeGB, tipo, rutaDestino, localPath } };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -416,
+        1040
+      ],
+      "id": "e7e7d5a0-a6a9-4969-82bf-e128700fa6a1",
+      "name": "Clasificar archivo (FALSE)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Clasifica cada archivo extraido y usa la RUTA REAL que n8n ya conoce\nfunction safeName(name) {\n  let s = (name || \"file\").normalize(\"NFC\");\n  s = s.replace(/[\\x00-\\x1F]/g, \"\");\n  s = s.replace(/[\\[\\]]/g, \"\");              // quitar corchetes\n  s = s.replace(/[:*?\"<>|]/g, \"_\");\n  s = s.replace(/\\s+/g, \"_\").trim();          // espacios -> guion bajo\n  return s || \"file\";\n}\n\nconst item = $input.item;\nconst data = item.binary?.data;\nconst filename = data?.fileName || 'file';        // nombre real del archivo extraido\nconst dir = data?.directory || '';                 // carpeta real donde quedo (n8n la sabe)\nconst filenameSafe = safeName(filename);\nconst nombre = filenameSafe.toLowerCase();\nconst ext = filename.includes('.') ? (filename.split('.').pop() || '').toLowerCase() : '';\nconst sizeBytes = Number(data?.fileSize || 0);\nconst sizeGB = sizeBytes / (1024 ** 3);\n\nlet rutaDestino = \"/_REVISAR/\";\nlet tipo = \"desconocido\";\n\nif (ext === \"pkg\") {\n  rutaDestino = \"/packages/\";\n  const esDLC = /dlc|addon|add-on/.test(nombre);\n  if (sizeGB > 5) tipo = \"juego\";\n  else if (sizeGB < 1 && esDLC) tipo = \"dlc\";\n  else tipo = \"update\";\n} else if (ext === \"iso\" || ext === \"bin\") {\n  tipo = \"iso\";\n  if (ext === \"bin\" || /ps1|psx/.test(nombre)) rutaDestino = \"/PSXISO/\";\n  else if (/ps2/.test(nombre)) rutaDestino = \"/PS2ISO/\";\n  else if (/psp/.test(nombre)) rutaDestino = \"/PSPISO/\";\n  else rutaDestino = \"/PS3ISO/\";\n} else if (ext === \"rap\") { rutaDestino = \"/exdata/\"; tipo = \"licencia\"; }\nelse if (ext === \"sprx\") { rutaDestino = \"/plugins/\"; tipo = \"plugin\"; }\nelse if (ext === \"self\" || ext === \"edat\") { rutaDestino = \"/game/\"; tipo = \"instalado\"; }\nelse if (ext === \"\" || /ps3_game/.test(nombre)) { rutaDestino = \"/GAMES/\"; tipo = \"carpeta_jb\"; }\n\n// localPath: ruta real en disco (puede tener espacios/corchetes; se maneja con comillas en lftp)\nconst localPath = dir ? (dir.replace(/\\/$/, \"\") + \"/\" + filename) : (\"/files/extracted/\" + filename);\n\nreturn { json: { ...$json, filename, filenameSafe, ext, sizeGB, tipo, rutaDestino, localPath }, binary: item.binary };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        624
+      ],
+      "id": "36d4d74c-245f-488a-bb12-ab6e21f16ce2",
+      "name": "Clasificar extraidos (TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=timeout 900 lftp -e \"set net:timeout 15; set net:max-retries 2; set net:reconnect-interval-base 5; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        352,
+        640
+      ],
+      "id": "dc57a809-1fa3-46bc-a277-bd87e8764e0b",
+      "name": "Subir a PS3 (lftp TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=timeout 1800 lftp -e \"set net:timeout 30; set net:max-retries 5; set net:reconnect-interval-base 10; set net:persist-retries 3; set xfer:clobber on; set ftp:passive-mode true; set ftp:charset ISO-8859-1; set ftp:ssl-allow no; mkdir -f -p \\\"/dev_hdd0{{ $json.rutaDestino }}\\\"; put \\\"{{ $json.localPath }}\\\" -o \\\"/dev_hdd0{{ $json.rutaDestino }}{{ $json.filenameSafe }}\\\"; bye\" -u \\\"root,root\\\" 192.168.1.26"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        1040
+      ],
+      "id": "f3ade96c-25a6-4403-b034-1103472f01da",
+      "name": "Subir a PS3 (lftp FALSE)"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.fileId }}?fields=name,size&supportsAllDrives=true",
+        "authentication": "<REDACTED>",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1264,
+        944
+      ],
+      "id": "ede295cc-d813-4211-89ce-2648e3a91b79",
+      "name": "Obtener metadata Drive",
+      "credentials": "<REDACTED>"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const fileId = $json.fileId || $('Code in JavaScript').item.json.fileId;\nlet filename = $json.name || ('file_' + fileId);\nfilename = filename.normalize(\"NFC\")\n  .replace(/[\\x00-\\x1F]/g, \"\").replace(/[\\[\\]]/g, \"\")\n  .replace(/[:*?\"<>|]/g, \"_\").replace(/\\s+/g, \"_\").trim();\nif (!filename) filename = \"file\";\nconst ext = filename.includes('.') ? (filename.split('.').pop()||'').toLowerCase() : '';\nconst localPath = \"/files/\" + filename;\nreturn { json: { fileId, filename, ext, localPath } };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1040,
+        944
+      ],
+      "id": "11b9ccb8-e017-466d-8e76-e454a88076a5",
+      "name": "Calcular filename"
+    },
+    {
+      "parameters": {
+        "url": "=https://www.googleapis.com/drive/v3/files/{{ $json.fileId }}?alt=media&supportsAllDrives=true",
+        "authentication": "<REDACTED>",
+        "nodeCredentialType": "googleDriveOAuth2Api",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "file"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -816,
+        1072
+      ],
+      "id": "3e112e21-eacb-4e7d-9589-0652c4b2d5a3",
+      "name": "Descargar a binario",
+      "credentials": "<REDACTED>"
+    },
+    {
+      "parameters": {
+        "command": "=EXEC=\"{{ $execution.id }}\"; BASE=\"/home/node/.n8n/binaryData/workflows\"; DIR=$(find \"$BASE\" -type d -path \"*/executions/$EXEC/binary_data\" 2>/dev/null | head -1); DEST=\"{{ $json.localPath }}\"; if [ -z \"$DIR\" ]; then echo \"NO_DIR exec=$EXEC\"; else SRC=$(find \"$DIR\" -type f ! -name \"*.metadata\" 2>/dev/null | head -1); if [ -z \"$SRC\" ]; then echo \"NO_SRC dir=$DIR\"; else cp \"$SRC\" \"$DEST\" && echo \"OK copiado $SRC -> $DEST\"; fi; fi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -864,
+        400
+      ],
+      "id": "2f96d2fc-be4b-47ab-ae26-b18f290ae67d",
+      "name": "Mover a /files (cp)"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Recupera los datos perdidos tras el Execute Command (cp)\nconst c = $('Calcular filename').item.json;\nconst stdout = $json.stdout || \"\";\nreturn { json: {\n  fileId: c.fileId,\n  filename: c.filename,\n  ext: c.ext,\n  localPath: c.localPath,\n  cpResult: stdout\n} };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -640,
+        288
+      ],
+      "id": "4d0e34cf-3941-4e50-be2d-9a5ca31a54fb",
+      "name": "Restaurar datos"
+    },
+    {
+      "parameters": {
+        "command": "=ZIP=\"{{ $('Calcular filename').item.json.localPath }}\"; EXT=\"/files/extracted/{{ $('Calcular filename').item.json.filename }}\"; rm -f \"$ZIP\"; rm -rf \"$EXT\"; echo \"limpieza TRUE: zip=$ZIP ext=$EXT\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        368,
+        432
+      ],
+      "id": "4f1914ff-c651-4e0d-a8fb-a15855a1e806",
+      "name": "Limpiar temporales (TRUE)"
+    },
+    {
+      "parameters": {
+        "command": "=ARCH=\"{{ $('Calcular filename').item.json.localPath }}\"; rm -f \"$ARCH\"; echo \"limpieza FALSE: $ARCH\""
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        16,
+        1040
+      ],
+      "id": "a299748e-8860-4c13-a412-4c648284ba23",
+      "name": "Limpiar temporales (FALSE)"
+    },
+    {
+      "parameters": {
+        "command": "=F=\"{{ $('Calcular filename').item.json.localPath }}\"; if [ -f \"$F\" ]; then stat -c%s \"$F\"; else echo 0; fi"
+      },
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        304
+      ],
+      "id": "949946cf-6d21-47e3-8b77-33db65a4331e",
+      "name": "Tamano real (stat)"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        144,
+        624
+      ],
+      "id": "dc1eb43f-d4b6-4422-ab2c-bb41fc48b995",
+      "name": "Loop archivos (TRUE)"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Obtener metadata Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Obtener metadata Drive": {
+      "main": [
+        [
+          {
+            "node": "Calcular filename",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calcular filename": {
+      "main": [
+        [
+          {
+            "node": "Descargar a binario",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Descargar a binario": {
+      "main": [
+        [
+          {
+            "node": "Mover a /files (cp)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mover a /files (cp)": {
+      "main": [
+        [
+          {
+            "node": "Restaurar datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Execute Command",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Tamano real (stat)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute Command": {
+      "main": [
+        [
+          {
+            "node": "Read/Write Files from Disk2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk2": {
+      "main": [
+        [
+          {
+            "node": "Clasificar extraidos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar extraidos (TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Loop archivos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Clasificar archivo (FALSE)": {
+      "main": [
+        [
+          {
+            "node": "Subir a PS3 (lftp FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Restaurar datos": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a PS3 (lftp TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Loop archivos (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Subir a PS3 (lftp FALSE)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar temporales (FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Tamano real (stat)": {
+      "main": [
+        [
+          {
+            "node": "Clasificar archivo (FALSE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop archivos (TRUE)": {
+      "main": [
+        [
+          {
+            "node": "Limpiar temporales (TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Subir a PS3 (lftp TRUE)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f1c99f35-05ce-4e48-935c-40d327dd1eb3",
+  "meta": {
+    "instanceId": "f71d68d44cb5993d15f9fd665b4c20c7dfdcfb9576afb9672cf0e7cfe70ffbd5"
+  },
+  "nodeGroups": [],
+  "id": "ia7QeIsH2bCgyPLm",
+  "tags": []
+}
