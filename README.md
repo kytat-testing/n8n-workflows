@@ -1,136 +1,61 @@
-# 🎮 n8n Game File Automation Workflows
+# n8n · Game File Automation Workflows
 
-Automatización completa de gestión de archivos (principalmente juegos) usando n8n.
+Automatización de gestión de archivos —principalmente juegos— construida sobre n8n: recepción, extracción, clasificación y transferencia, de extremo a extremo.
+El proyecto toma como referencia una consola **PS3**, pero está diseñado para adaptarse a cualquier sistema, ruta o tipo de archivo con cambios mínimos.
 
----
+## Workflows
 
-## 🚀 Overview
+| Workflow   | Trigger               | Notificaciones | Orientación           |
+|------------|-----------------------|----------------|-----------------------|
+| **Local**  | Webhook               | Telegram       | Self-hosted / homelab |
+| **Google** | Google Sheets + Drive | —              | Automatización en nube |
 
-Este proyecto incluye dos workflows diseñados para automatizar el manejo de archivos desde su recepción hasta su transferencia final.
+## Funcionalidades
 
-Está pensado tomando como referencia una consola **PS3**, pero puede adaptarse fácilmente a cualquier sistema, ruta o tipo de archivo.
+- Recepción o descarga de archivos.
+- Extracción automática (`zip`, `rar`, `7z`).
+- Clasificación por tipo según reglas configurables.
+- Transferencia vía FTP con `lftp`.
+- Limpieza automática de temporales.
+- Notificaciones por Telegram *(solo workflow local)*.
 
----
-
-## 🔄 Workflows incluidos
-
-* **Local Workflow**
-
-  * Trigger: Webhook
-  * Incluye notificaciones por Telegram
-
-* **Google Workflow**
-
-  * Trigger: Google Sheets + Google Drive
-  * Orientado a automatización desde la nube
-
----
-
-## ⚙️ Funcionalidades
-
-* 📥 Recepción o descarga de archivos
-* 📦 Extracción automática (`zip`, `rar`, `7z`)
-* 🧠 Clasificación inteligente por tipo de archivo
-* 📤 Transferencia vía FTP (`lftp`)
-* 🧹 Limpieza automática de archivos temporales
-* 📲 Notificaciones por Telegram *(solo en flujo local)*
-
----
-
-## 🧠 Lógica de Clasificación
-
-Ejemplo:
+## Lógica de clasificación
 
 ```javascript
 if (ext === "pkg") {
-  if (sizegb > 5) tipo = "juego";
-  else if (sizegb < 1 && esdlc) tipo = "dlc";
-  else tipo = "update";
-}
+  if (sizeGB > 5)               tipo = "juego";
+  else if (sizeGB < 1 && esDLC) tipo = "dlc";
+  else                          tipo = "update";
+} 
 ```
+## Requisitos
+- n8n (recomendado vía Docker) .
+- Node.js (node:bullseye).
+- 7z y lftp instalados · Acceso FTP.
+- Bot de Telegram (opcional).
+- Workflow Google: credenciales de Google API, Sheets y Drive.
 
-Permite automatizar decisiones sin intervención manual.
+## Configuración
+- Reemplaza los valores REDACTED con tus datos: IP del destino, credenciales FTP y tokens/API keys (Telegram, Google).
+Revisa y adapta los nodos antes de usar en producción. No publiques credenciales.
 
----
-
-## 📦 Requisitos
-
-* n8n (recomendado en Docker)
-* Node.js (`node:bullseye`)
-* `7z` instalado
-* `lftp` instalado
-* Acceso FTP
-* Bot de Telegram (opcional)
-
-### Para el workflow con Google
-
-* Credenciales de Google API
-* Google Sheets
-* Google Drive
-
----
-
-## ⚡ Casos de uso
-
-* 🎮 Automatización de biblioteca de juegos
-* 🏠 Homelab gamer
-* 🤖 Integración con bots (Telegram / Sheets)
-* 📡 Descargas automatizadas desde la nube
-
----
-
-## 🧹 Ventajas
-
-* ✔ 100% automatizado
-* ✔ Escalable
-* ✔ Modular
-* ✔ Reduce errores manuales
-* ✔ Limpieza automática de almacenamiento
-
----
-
-## 🚧 Posibles mejoras
-
-* Soporte multi-consola (PS2, PSP, etc.)
-* Integración con torrents
-* Validación de integridad (MD5 / SHA)
-* Notificaciones más avanzadas
-
----
-
-## ⚠️ Configuración
-
-Los valores marcados como:
-
+## Instalación
+ 1. Levantar n8n (ejemplo con Docker)
+``` docker run -it --rm \
+  --name n8n \
+  -p 5678:5678 \
+  -v n8n_data:/home/node/.n8n \
+  docker.n8n.io/n8nio/n8n
 ```
-<REDACTED>
-```
+2. Importar los workflows desde la interfaz de n8n
+   Workflows → Import from File
 
-deben ser reemplazados con tus propios datos:
+3. Configurar credenciales y variables (ver sección Configuración)
 
-* IP de la consola
-* Credenciales FTP
-* Tokens / API keys
 
----
-
-## 📌 Notas
-
-* Revisa y adapta los workflows antes de usarlos en producción
-* Puedes modificar fácilmente los nodos para otros tipos de archivos
-* Compatible con entornos self-hosted (homelab)
-
----
-
-## 🤖 Soporte
-
-Si tienes dudas o errores, puedes apoyarte en:
-
-* Documentación oficial de n8n https://docs.n8n.io/
-* Herramientas de IA
-
----
-
-## ⭐ Contribuciones
-
-Las mejoras y sugerencias son bienvenidas.
+## Roadmap
+- Soporte multi-consola (PS2, PSP, etc.).
+- Integración con torrents.
+- Validación de integridad (MD5 / SHA).
+- Notificaciones avanzadas.
+- Documentación oficial de n8n · Issues y PRs son bienvenidos.
